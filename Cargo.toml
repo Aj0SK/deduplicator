@@ -1,0 +1,12 @@
+[package]
+name = "deduplicator"
+version = "0.1.0"
+authors = ["Aj0SK <andrejkorman@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+crc32fast = "1.2.0"
+walkdir = "2"
+queue = "0.3.0"
