@@ -1,8 +1,9 @@
 use crc32fast::Hasher;
+
 use queue::Queue;
+use std::collections::HashMap;
 
 use std::fs::{self, DirEntry};
-
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -38,32 +39,27 @@ fn find_files(root_path : &str) -> Vec<PathBuf> {
 }
 
 fn main() {
-    /*let mut hasher = Hasher::new();
-    hasher.update(b"foo bar baz");
-    let checksum = hasher.finalize();
-    
-    println!("Hello, world! {}", checksum);
-    
-    let path = PathBuf::from("../data");
-    let x = count_files_walking(&path);
-    println!("Count is {}", x);*/
-    
     let res_files = find_files("../data");
     
-    for x in res_files.iter() {
-        println!("In {:?} is:", x);
-        
+    let mut duplicit_helper = HashMap::new();
+    
+    for path in res_files.iter() {
         let mut contents = String::new();
-        File::open(x)
+        File::open(path)
             .unwrap()
             .read_to_string(&mut contents)
             .unwrap();
-        println!("{}", contents);
-        
+
         let mut hasher = Hasher::new();
         hasher.update(contents.as_bytes());
         let checksum = hasher.finalize();
         
-        println!("and checksum is {}", checksum);
+        println!("File {:?} with checksum {}", path, checksum);
+        
+        if duplicit_helper.contains_key(&checksum.clone()) {
+            println!("Duplicit with {:?}", duplicit_helper[&checksum]);
+        }
+        
+        duplicit_helper.insert(checksum, path);
     }
 }
