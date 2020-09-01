@@ -4,10 +4,16 @@
 name = "deduplicator"
 version = "0.1.0"
 dependencies = [
+ "md5 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "queue 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "walkdir 2.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "wyhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "md5"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "queue"
@@ -73,6 +79,7 @@ dependencies = [
 ]
 
 [metadata]
+"checksum md5 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
 "checksum queue 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6ff7e7fd62294a081720771513c1c1c995468a5d4e771a2928e423b88682ce48"
 "checksum rand_core 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "9c33a3c44ca05fa6f1807d8e6743f3824e8509beca625669633be0acbdf509dc"
 "checksum same-file 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)" = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"

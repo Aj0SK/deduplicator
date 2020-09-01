@@ -6,29 +6,32 @@ use std::env;
 use queue::Queue;
 use std::collections::HashMap;
 
-use std::fs::File;
-use std::fs::{self, DirEntry};
+use std::fs::{self, File};
 use std::io::prelude::*;
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+fn remove_verbose(path: &PathBuf) {
+    println!("Removing {:?}", path);
+    fs::remove_file(path).expect("Problem with file deleting.");
+}
 
 fn find_files(root_path: &str) -> Vec<PathBuf> {
-    let res_files: Vec<PathBuf> = vec![];
-
     let root_path = PathBuf::from(root_path);
 
     let mut q = Queue::new();
-    let mut res_files = Vec::new();
+    let mut res_files: Vec<PathBuf> = Vec::new();
 
-    q.queue(root_path);
+    q.queue(root_path)
+        .expect("Error during queue push of root.");
 
     while q.len() != 0 {
-        let path = q.dequeue().expect("Bad thing.");
-        for entry in fs::read_dir(path).expect("Bad thing.") {
+        let path = q.dequeue().expect("Error during queue pop.");
+        for entry in fs::read_dir(path).expect("Error during listing files.") {
             let entry = entry.expect("Bad thing.");
             let new_path = entry.path();
             if new_path.is_dir() {
-                q.queue(new_path);
+                q.queue(new_path).expect("Error during queue push.");
             } else {
                 res_files.push(new_path)
             }
@@ -40,7 +43,7 @@ fn find_files(root_path: &str) -> Vec<PathBuf> {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let del = {
+    let del: bool = {
         if args.len() >= 2 && &args[1] == "delete" {
             true
         } else {
@@ -63,30 +66,33 @@ fn main() {
         let modified = f.metadata().unwrap().modified().unwrap();
 
         let checksum = wyhash(&contents, 3);
-
         println!(
             "File {:?} with checksum {} and {:?}",
             path, checksum, modified
         );
 
+        /*let checksum = md5::compute(&contents);
+        println!(
+            "File {:?} with checksum {:x} and {:?}",
+            path, checksum, modified
+        );*/
+
         if duplicit_helper.contains_key(&checksum.clone()) {
             println!("Duplicit with {:?}", duplicit_helper[&checksum]);
-            let modified2 = files_mod[&checksum];
-            let path2 = duplicit_helper[&checksum];
+            let modified_prev = files_mod[&checksum];
+            let path_prev = duplicit_helper[&checksum];
+            let to_remove;
 
-            if modified < modified2 {
+            if modified < modified_prev {
                 files_mod.insert(checksum, modified);
                 duplicit_helper.insert(checksum, path);
-
-                if del {
-                    fs::remove_file(path2);
-                    println!("Removing {:?}", path2);
-                }
+                to_remove = path_prev;
             } else {
-                if del {
-                    fs::remove_file(path);
-                    println!("Removing {:?}", path);
-                }
+                to_remove = path;
+            }
+
+            if del {
+                remove_verbose(to_remove);
             }
             continue;
         }
