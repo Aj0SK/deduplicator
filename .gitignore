@@ -1,5 +1,5 @@
 /target
 **/*.rs.bk
 
-test/data
-test/**/*.out
+data
+test_data_gen.out
