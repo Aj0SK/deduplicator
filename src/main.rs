@@ -1,4 +1,5 @@
-use crc32fast::Hasher;
+extern crate wyhash;
+use wyhash::wyhash;
 
 use queue::Queue;
 use std::collections::HashMap;
@@ -43,16 +44,16 @@ fn main() {
     
     let mut duplicit_helper = HashMap::new();
     
+    let mut contents = Vec::new();
+    
     for path in res_files.iter() {
-        let mut contents = Vec::new();
+        contents.clear();
         File::open(path)
             .unwrap()
             .read_to_end(&mut contents)
             .unwrap();
 
-        let mut hasher = Hasher::new();
-        hasher.update(&contents);
-        let checksum = hasher.finalize();
+        let checksum = wyhash(&contents, 3);
         
         println!("File {:?} with checksum {}", path, checksum);
         
