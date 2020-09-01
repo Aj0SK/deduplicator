@@ -19,8 +19,9 @@ using std::to_string;
 using std::vector;
 
 constexpr size_t kMaxDepth = 4;
-constexpr size_t kMaxCount = 30;
+constexpr size_t kMaxCount = 40;
 constexpr size_t kStopRatio = 3;
+constexpr size_t kSeed = 21;
 
 struct DirTreeNode
 {
@@ -39,19 +40,19 @@ void create_file(const string& path, std::mt19937& gen, int type = 0)
   ofstream f(path);
   if (type == 0)
   {
-    f << "Small file\n";
+    f << gen();
   }
   else if (type == 1)
   {
-    if (gen() % 4 != 0)
-    {
-      f << gen();
-    }
-    else
-    {
-      string command = "/bin/dd if=/dev/urandom of=" + path + " bs=1M count=25";
-      std::system(command.c_str());
-    }
+    string command =
+        "/bin/dd if=/dev/urandom of=" + path + " bs=1M count=" + to_string(500);
+    std::system(command.c_str());
+  }
+  else
+  {
+    string command =
+        "/bin/dd if=/dev/zero of=" + path + " bs=1M count=" + to_string(500);
+    std::system(command.c_str());
   }
 
   f.close();
@@ -59,8 +60,7 @@ void create_file(const string& path, std::mt19937& gen, int type = 0)
 
 shared_ptr<DirTreeNode> create_tree(const string& root_dir)
 {
-  unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-  std::mt19937 gen(seed);
+  std::mt19937 gen(kSeed);
 
   shared_ptr<DirTreeNode> root = std::make_shared<DirTreeNode>(root_dir, true);
   fs::create_directory(root_dir);
@@ -77,7 +77,8 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
       if (random == 0 || curr_depth == kMaxDepth)
       {
         string filename = to_string(gen()) + ".txt";
-        create_file(curr_path + "/" + filename, gen, 1);
+        int type = gen() % 3;
+        create_file(curr_path + "/" + filename, gen, type);
         curr_root->add_file(std::make_shared<DirTreeNode>(filename, false));
         // add duplicate
         string filename_dup = to_string(gen()) + ".txt";
