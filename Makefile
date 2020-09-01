@@ -2,10 +2,22 @@ CC = clang++
 CCFLAGS = -O2 -std=c++17 -Wall -fsanitize=address
 TEST_DIR = test
 
-all: create_test_data
+DEDUPLICATOR = delete
+TIME = time
+
+all: run_test
 
 reformat:
 	clang-format -i -style=file $(TEST_DIR)/*.cpp
+
+reformat_rust:
+	cargo fmt
+
+run_test: create_test_data deduplicator
+	$(TIME) ./target/release/deduplicator $(DEDUPLICATOR)
+
+deduplicator:
+	cargo build --release
 
 create_test_data: test_data_gen
 	./test_data_gen.out
