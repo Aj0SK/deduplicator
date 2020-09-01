@@ -39,7 +39,7 @@ fn find_files(root_path : &str) -> Vec<PathBuf> {
 }
 
 fn main() {
-    let res_files = find_files("../data");
+    let res_files = find_files("data");
     
     let mut duplicit_helper = HashMap::new();
     
