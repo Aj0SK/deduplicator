@@ -4,6 +4,9 @@ TEST_DIR = test
 
 all: create_test_data
 
+reformat:
+	clang-format -i -style=file $(TEST_DIR)/*.cpp
+
 create_test_data: test_data_gen
 	./test_data_gen.out
 
