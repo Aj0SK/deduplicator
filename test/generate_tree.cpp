@@ -65,7 +65,7 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
   shared_ptr<DirTreeNode> root = std::make_shared<DirTreeNode>(root_dir, true);
   fs::create_directory(root_dir);
 
-  for (size_t i = 0; i < kMaxCount; ++i)
+  for (size_t i = 0; i < kMaxCount / 2; ++i)
   {
     auto curr_root = root;
     int curr_depth = 0;
@@ -79,6 +79,10 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
         string filename = to_string(gen()) + ".txt";
         create_file(curr_path + "/" + filename, gen, 1);
         curr_root->add_file(std::make_shared<DirTreeNode>(filename, false));
+        // add duplicate
+        string filename_dup = to_string(gen()) + ".txt";
+        fs::copy(curr_path + "/" + filename, curr_path + "/" + filename_dup);
+        curr_root->add_file(std::make_shared<DirTreeNode>(filename_dup, false));
         break;
       }
 

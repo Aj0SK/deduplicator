@@ -39,19 +39,19 @@ fn find_files(root_path : &str) -> Vec<PathBuf> {
 }
 
 fn main() {
-    let res_files = find_files("data");
+    let res_files = find_files("./test/data");
     
     let mut duplicit_helper = HashMap::new();
     
     for path in res_files.iter() {
-        let mut contents = String::new();
+        let mut contents = Vec::new();
         File::open(path)
             .unwrap()
-            .read_to_string(&mut contents)
+            .read_to_end(&mut contents)
             .unwrap();
 
         let mut hasher = Hasher::new();
-        hasher.update(contents.as_bytes());
+        hasher.update(&contents);
         let checksum = hasher.finalize();
         
         println!("File {:?} with checksum {}", path, checksum);
