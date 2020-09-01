@@ -24,7 +24,7 @@ constexpr size_t kStopRatio = 3;
 constexpr size_t kSeed = 21;
 constexpr size_t kFileMinSizeBlocks = 128;
 constexpr size_t kFileMaxSizeBlocks = 256;
-constexpr char blockSize[] = "1K";
+const string blockSize("1K");
 
 struct DirTreeNode
 {
@@ -41,21 +41,22 @@ struct DirTreeNode
 void create_file(const string& path, std::mt19937& gen, int type = 0)
 {
   ofstream f(path);
-  int size = gen() % (kFileMaxSizeBlocks + 1 - kFileMinSizeBlocks) + kFileMinSizeBlocks;
+  int size = gen() % (kFileMaxSizeBlocks + 1 - kFileMinSizeBlocks) +
+             kFileMinSizeBlocks;
   if (type == 0)
   {
     f << gen();
   }
   else if (type == 1)
   {
-    string command =
-        "/bin/dd if=/dev/urandom of=" + path + " bs=" + blockSize + " count=" + to_string(size);
+    string command = "/bin/dd if=/dev/urandom of=" + path + " bs=" + blockSize +
+                     " count=" + to_string(size);
     std::system(command.c_str());
   }
   else
   {
-    string command =
-        "/bin/dd if=/dev/zero of=" + path + " bs=" + blockSize + " count=" + to_string(size);
+    string command = "/bin/dd if=/dev/zero of=" + path + " bs=" + blockSize +
+                     " count=" + to_string(size);
     std::system(command.c_str());
   }
 
