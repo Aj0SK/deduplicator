@@ -19,7 +19,7 @@ using std::to_string;
 using std::vector;
 
 constexpr size_t kMaxDepth = 4;
-constexpr size_t kMaxCount = 10;
+constexpr size_t kMaxCount = 30;
 constexpr size_t kStopRatio = 3;
 
 struct DirTreeNode
@@ -27,9 +27,11 @@ struct DirTreeNode
   string name;
   bool directory = false;
   vector<shared_ptr<DirTreeNode>> desc = {};
+  vector<shared_ptr<DirTreeNode>> files = {};
   DirTreeNode(const string& name, bool is_directory)
       : name(name), directory(is_directory){};
   void add_desc(shared_ptr<DirTreeNode>&& x) { desc.push_back(std::move(x)); };
+  void add_file(shared_ptr<DirTreeNode>&& x) { files.push_back(std::move(x)); };
 };
 
 void create_file(const string& path, std::mt19937& gen, int type = 0)
@@ -41,7 +43,15 @@ void create_file(const string& path, std::mt19937& gen, int type = 0)
   }
   else if (type == 1)
   {
-    f << gen();
+    if (gen() % 4 != 0)
+    {
+      f << gen();
+    }
+    else
+    {
+      string command = "/bin/dd if=/dev/urandom of=" + path + " bs=1M count=25";
+      std::system(command.c_str());
+    }
   }
 
   f.close();
@@ -66,7 +76,9 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
       int random = gen() % kStopRatio;
       if (random == 0 || curr_depth == kMaxDepth)
       {
-        create_file(curr_path + "/" + to_string(gen()) + ".txt", gen, 1);
+        string filename = to_string(gen()) + ".txt";
+        create_file(curr_path + "/" + filename, gen, 1);
+        curr_root->add_file(std::make_shared<DirTreeNode>(filename, false));
         break;
       }
 
@@ -93,6 +105,12 @@ void print_tree(shared_ptr<DirTreeNode> root_dir, int tabs = 0)
     cout << root_dir->name << " dir: " << endl;
   else
     cout << root_dir->name << endl;
+
+  for (const auto& x : root_dir->files)
+  {
+    cout << spaces << '\t';
+    cout << "File " << x->name << endl;
+  }
 
   for (const auto& x : root_dir->desc)
   {
