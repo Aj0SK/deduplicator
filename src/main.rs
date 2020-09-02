@@ -96,7 +96,7 @@ fn main() {
             let path_prev = duplicit_helper[&checksum];
             let to_remove;
 
-            if modified < modified_prev {
+            if modified < modified_prev || (modified == modified_prev && path < path_prev) {
                 files_mod.insert(checksum, modified);
                 duplicit_helper.insert(checksum, path);
                 to_remove = path_prev;
