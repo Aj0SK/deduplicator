@@ -27,5 +27,16 @@ main:
 main-notime:
 	./target/release/deduplicator $(DEDUPLICATOR)
 
+main-notime-nodelete:
+	./target/release/deduplicator
+
 test_data_gen:
 	$(CC) $(CCFLAGS) $(TEST_DIR)/generate_tree.cpp -o test_data_gen.out
+
+unit_tests: unit_tests_install unit_tests_run
+
+unit_tests_install:
+	cd test && npm i
+
+unit_tests_run:
+	cd test && npm run test

@@ -18,7 +18,7 @@ const mock = x => x.split("").map(x=>Math.random()<1/2?x.toLowerCase():x.toUpper
         const {stdout, stderr} = await exec('fdupes -r1q data', {cwd: "../"});
         tap.ok(stdout, "Fdupes stdout should be truthy");
         tap.notOk(stderr, "Fdupes stderr should be falsey");
-        fdupesSorted = stdout.split("\n").filter(Boolean).sort();
+        fdupesSorted = stdout.split("\n").filter(Boolean).map(x=>x.trim()).sort();
     })();
     await (async () => {
         const {stdout, stderr} = await exec('make -s main-notime', {cwd: "../"});
@@ -27,7 +27,7 @@ const mock = x => x.split("").map(x=>Math.random()<1/2?x.toLowerCase():x.toUpper
         deduplicatorSorted = stdout.split("\n").filter(Boolean).sort();
     })();
     tap.ok(deduplicatorSorted);
-    tap.same(fdupesSorted, deduplicatorSorted, "Outputs should be equal");
+    tap.same(deduplicatorSorted, fdupesSorted, "Outputs should be equal");
 
     fdupesSorted.map((entry,index) => tap.same(entry, deduplicatorSorted[index], "entry should be equal"));
 
