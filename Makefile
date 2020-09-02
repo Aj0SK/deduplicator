@@ -13,14 +13,16 @@ reformat:
 reformat_rust:
 	cargo fmt
 
-run_test: create_test_data deduplicator
-	$(TIME) ./target/release/deduplicator $(DEDUPLICATOR)
+run_test: create_test_data deduplicator main
 
 deduplicator:
 	cargo build --release
 
 create_test_data: test_data_gen
 	./test_data_gen.out
+
+main:
+	$(TIME) ./target/release/deduplicator $(DEDUPLICATOR)
 
 test_data_gen:
 	$(CC) $(CCFLAGS) $(TEST_DIR)/generate_tree.cpp -o test_data_gen.out
