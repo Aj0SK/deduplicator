@@ -19,12 +19,13 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-std::map<string, size_t> config = {
-    {"kMaxDepth", 4}, {"kMaxCount", 40}, {"kStopRatio", 3}};
+std::map<string, size_t> config = {{"kSeed", 21},
+                                   {"kMaxDepth", 4},
+                                   {"kMaxCount", 40},
+                                   {"kStopRatio", 3},
+                                   {"kFileMinSizeBlocks", 128},
+                                   {"kFileMaxSizeBlocks", 256}};
 
-constexpr size_t kSeed = 21;
-constexpr size_t kFileMinSizeBlocks = 128;
-constexpr size_t kFileMaxSizeBlocks = 256;
 const string blockSize("1K");
 
 struct DirTreeNode
@@ -42,8 +43,9 @@ struct DirTreeNode
 void create_file(const string& path, std::mt19937& gen, int type = 0)
 {
   ofstream f(path);
-  int size = gen() % (kFileMaxSizeBlocks + 1 - kFileMinSizeBlocks) +
-             kFileMinSizeBlocks;
+  int size = gen() % (config["kFileMaxSizeBlocks"] + 1 -
+                      config["kFileMinSizeBlocks"]) +
+             config["kFileMinSizeBlocks"];
   if (type == 0)
   {
     f << gen();
@@ -66,7 +68,7 @@ void create_file(const string& path, std::mt19937& gen, int type = 0)
 
 shared_ptr<DirTreeNode> create_tree(const string& root_dir)
 {
-  std::mt19937 gen(kSeed);
+  std::mt19937 gen(config["kSeed"]);
 
   shared_ptr<DirTreeNode> root = std::make_shared<DirTreeNode>(root_dir, true);
   fs::create_directory(root_dir);
