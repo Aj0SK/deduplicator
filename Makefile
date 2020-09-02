@@ -24,5 +24,8 @@ create_test_data: test_data_gen
 main:
 	$(TIME) ./target/release/deduplicator $(DEDUPLICATOR)
 
+main-notime:
+	./target/release/deduplicator $(DEDUPLICATOR)
+
 test_data_gen:
 	$(CC) $(CCFLAGS) $(TEST_DIR)/generate_tree.cpp -o test_data_gen.out
