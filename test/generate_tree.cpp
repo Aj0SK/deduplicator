@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <random>
 #include <string>
@@ -18,9 +19,9 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-constexpr size_t kMaxDepth = 4;
-constexpr size_t kMaxCount = 40;
-constexpr size_t kStopRatio = 3;
+std::map<string, size_t> config = {
+    {"kMaxDepth", 4}, {"kMaxCount", 40}, {"kStopRatio", 3}};
+
 constexpr size_t kSeed = 21;
 constexpr size_t kFileMinSizeBlocks = 128;
 constexpr size_t kFileMaxSizeBlocks = 256;
@@ -70,7 +71,7 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
   shared_ptr<DirTreeNode> root = std::make_shared<DirTreeNode>(root_dir, true);
   fs::create_directory(root_dir);
 
-  for (size_t i = 0; i < kMaxCount / 2; ++i)
+  for (size_t i = 0; i < config["kMaxCount"] / 2; ++i)
   {
     auto curr_root = root;
     int curr_depth = 0;
@@ -78,8 +79,8 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
 
     while (1)
     {
-      int random = gen() % kStopRatio;
-      if (random == 0 || curr_depth == kMaxDepth)
+      int random = gen() % config["kStopRatio"];
+      if (random == 0 || curr_depth == config["kMaxDepth"])
       {
         string filename = to_string(gen()) + ".txt";
         int type = gen() % 3;
@@ -128,10 +129,20 @@ void print_tree(shared_ptr<DirTreeNode> root_dir, int tabs = 0)
   }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
   // not sure of performance benefits
   // ios_base::sync_with_stdio(false);
+  for (size_t i = 1; i < argc; i += 2)
+  {
+    string arg_name(argv[i]);
+    if (config.find(arg_name) != config.end())
+    {
+      size_t value = static_cast<size_t>(std::stoull(argv[i + 1]));
+      config[arg_name] = value;
+    }
+  }
+
   string path = "data";
 
   std::uintmax_t n = fs::remove_all(path);
