@@ -100,18 +100,10 @@ fn main() {
                 files_mod.insert(checksum, modified);
                 duplicit_helper.insert(checksum, path);
                 to_remove = path_prev;
-                println!(
-                    "{} {}",
-                    path.to_string_lossy(),
-                    duplicit_helper[&checksum].to_string_lossy()
-                );
+                println!("{} {}", path.to_string_lossy(), path_prev.to_string_lossy());
             } else {
                 to_remove = path;
-                println!(
-                    "{} {}",
-                    duplicit_helper[&checksum].to_string_lossy(),
-                    path.to_string_lossy()
-                );
+                println!("{} {}", path_prev.to_string_lossy(), path.to_string_lossy());
             }
 
             if del {
