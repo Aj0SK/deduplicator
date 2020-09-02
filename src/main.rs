@@ -12,15 +12,16 @@ use std::io::prelude::*;
 use std::path::PathBuf;
 
 fn remove_verbose(path: &PathBuf) {
-    println!("Removing {:?}", path);
+    //println!("Removing {:?}", path);
     fs::remove_file(path).expect("Problem with file deleting.");
 }
 
-fn find_files(root_path: &str) -> Vec<PathBuf> {
+fn find_files(root_path: &str) -> (Vec<PathBuf>, std::collections::HashMap<u64, u64>) {
     let root_path = PathBuf::from(root_path);
 
     let mut q = Queue::new();
     let mut res_files: Vec<PathBuf> = Vec::new();
+    let mut files_sizes = HashMap::new();
 
     q.queue(root_path)
         .expect("Error during queue push of root.");
@@ -33,12 +34,18 @@ fn find_files(root_path: &str) -> Vec<PathBuf> {
             if new_path.is_dir() {
                 q.queue(new_path).expect("Error during queue push.");
             } else {
-                res_files.push(new_path)
+                let file_size = fs::metadata(&new_path).unwrap().len();
+                if files_sizes.contains_key(&file_size) {
+                    files_sizes.insert(file_size, 2);
+                } else {
+                    files_sizes.insert(file_size, 1);
+                }
+                res_files.push(new_path);
             }
         }
     }
 
-    res_files
+    (res_files, files_sizes)
 }
 
 fn main() {
@@ -51,9 +58,9 @@ fn main() {
         }
     };
 
-    let res_files = find_files("data");
+    let (res_files, files_sizes) = find_files("data");
 
-    let mut duplicit_helper = HashMap::new();
+    let mut duplicit_helper: std::collections::HashMap<u64, &std::path::PathBuf> = HashMap::new();
     let mut contents = Vec::new();
 
     let mut files_mod = HashMap::new();
@@ -63,13 +70,20 @@ fn main() {
         let mut f = File::open(path).unwrap();
         f.read_to_end(&mut contents).unwrap();
 
-        let modified = f.metadata().unwrap().modified().unwrap();
+        let metadata = f.metadata().unwrap();
+        let modified = metadata.modified().unwrap();
+        let file_size = metadata.len();
+
+        if !files_sizes.contains_key(&file_size) {
+            continue;
+        }
 
         let checksum = wyhash(&contents, 3);
-        println!(
+
+        /*println!(
             "File {:?} with checksum {} and {:?}",
             path, checksum, modified
-        );
+        );*/
 
         /*let checksum = md5::compute(&contents);
         println!(
@@ -78,7 +92,6 @@ fn main() {
         );*/
 
         if duplicit_helper.contains_key(&checksum.clone()) {
-            println!("Duplicit with {:?}", duplicit_helper[&checksum]);
             let modified_prev = files_mod[&checksum];
             let path_prev = duplicit_helper[&checksum];
             let to_remove;
@@ -87,8 +100,18 @@ fn main() {
                 files_mod.insert(checksum, modified);
                 duplicit_helper.insert(checksum, path);
                 to_remove = path_prev;
+                println!(
+                    "{} {}",
+                    path.to_string_lossy(),
+                    duplicit_helper[&checksum].to_string_lossy()
+                );
             } else {
                 to_remove = path;
+                println!(
+                    "{} {}",
+                    duplicit_helper[&checksum].to_string_lossy(),
+                    path.to_string_lossy()
+                );
             }
 
             if del {
