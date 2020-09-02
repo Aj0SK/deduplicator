@@ -19,7 +19,7 @@ deduplicator:
 	cargo build --release
 
 create_test_data: test_data_gen
-	./test_data_gen.out kMaxCount 50
+	./test_data_gen.out ./data kMaxCount 50
 
 main:
 	$(TIME) ./target/release/deduplicator $(DEDUPLICATOR)

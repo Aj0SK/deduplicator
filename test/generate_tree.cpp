@@ -92,6 +92,10 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
         string filename_dup = to_string(gen()) + ".txt";
         fs::copy(curr_path + "/" + filename, curr_path + "/" + filename_dup);
         curr_root->add_file(std::make_shared<DirTreeNode>(filename_dup, false));
+
+        cout << curr_path + "/" + filename << " "
+             << curr_path + "/" + filename_dup << endl;
+
         break;
       }
 
@@ -135,7 +139,19 @@ int main(int argc, char* argv[])
 {
   // not sure of performance benefits
   // ios_base::sync_with_stdio(false);
-  for (size_t i = 1; i < argc; i += 2)
+
+  string path = "data";
+
+  if (argc < 2)
+  {
+    std::cerr << "Bad number of params. Usage is " << argv[0] << " data_dir "
+              << endl;
+    return 1;
+  }
+
+  path = argv[1];
+
+  for (size_t i = 2; i < argc; i += 2)
   {
     string arg_name(argv[i]);
     if (config.find(arg_name) != config.end())
@@ -145,14 +161,13 @@ int main(int argc, char* argv[])
     }
   }
 
-  string path = "data";
-
   std::uintmax_t n = fs::remove_all(path);
-  std::cout << "Deleted " << n << " files or directories\n";
+  // std::cout << "Deleted " << n << " files or
+  // directories\n";
 
   auto x = create_tree(path);
 
-  print_tree(x);
+  // print_tree(x);
 
   return 0;
 }
