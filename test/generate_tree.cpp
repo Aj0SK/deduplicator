@@ -6,9 +6,12 @@
 #include <memory>
 #include <random>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace fs = std::filesystem;
+
+using namespace std::chrono_literals;
 
 using std::cin;
 using std::cout;
@@ -94,6 +97,8 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
 
         string filename_dup = to_string(gen()) + ".txt";
         string duplicate = curr_path + "/" + filename_dup;
+
+        std::this_thread::sleep_for(100ms);
 
         fs::copy(original, duplicate);
         curr_root->add_file(std::make_shared<DirTreeNode>(filename_dup, false));
