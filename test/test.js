@@ -24,7 +24,7 @@ const presliTesty = true;
         fdupesSorted = stdout.split("\n").filter(Boolean).map(x=>x.trim()).sort();
     })();
     await (async () => {
-        const {stdout, stderr} = await exec('make -s main-notime', {cwd: "../"});
+        const {stdout, stderr} = await exec('make -s main-notime-nodelete', {cwd: "../"});
         tap.ok(stdout, "Deduplicator stdout should be truthy");
         tap.notOk(stderr, "Deduplicator stderr should be falsey");
         deduplicatorSorted = stdout.split("\n").filter(Boolean).map(x=>x.trim()).sort();
@@ -34,7 +34,7 @@ const presliTesty = true;
     tap.same(deduplicatorSorted, fdupesSorted, "Outputs deduplicatorSorted and fdupesSorted should be equal");
     tap.same(cppSorted, deduplicatorSorted, "Outputs cppSorted and deduplicatorSorted should be equal");
 
-    //fdupesSorted.map((entry,index) => tap.same(entry, deduplicatorSorted[index], "entry should be equal"));
+    fdupesSorted.map((entry,index) => tap.same(entry, deduplicatorSorted[index], "entry should be equal"));
 
 
 })();
