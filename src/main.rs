@@ -1,6 +1,9 @@
 extern crate wyhash;
 use wyhash::wyhash;
 
+pub mod comp_files;
+use crate::comp_files::add;
+
 use queue::Queue;
 use std::collections::HashMap;
 
@@ -92,7 +95,10 @@ fn main() {
             let path_prev = duplicit_helper[&checksum];
             let to_remove;
 
-            if modif_time < modified_prev || (modif_time == modified_prev && path.file_name().unwrap() < path_prev.file_name().unwrap()) {
+            if modif_time < modified_prev
+                || (modif_time == modified_prev
+                    && path.file_name().unwrap() < path_prev.file_name().unwrap())
+            {
                 files_mod.insert(checksum, modif_time);
                 duplicit_helper.insert(checksum, path);
                 to_remove = path_prev;
