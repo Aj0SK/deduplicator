@@ -7,7 +7,7 @@ TIME = time
 
 all: run_test
 
-reformat:
+reformat: reformat_rust
 	clang-format -i -style=file $(TEST_DIR)/*.cpp
 
 reformat_rust:

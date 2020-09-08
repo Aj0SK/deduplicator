@@ -78,33 +78,22 @@ fn main() {
         f.read_to_end(&mut contents).unwrap();
 
         let metadata = f.metadata().unwrap();
-        let modified = metadata.modified().unwrap();
+        let modif_time = metadata.modified().unwrap();
         let file_size = metadata.len();
 
-        if !files_sizes.contains_key(&file_size) {
+        if files_sizes[&file_size] == 1 {
             continue;
         }
 
         let checksum = wyhash(&contents, 3);
-
-        /*println!(
-            "File {:?} with checksum {} and {:?}",
-            path, checksum, modified
-        );*/
-
-        /*let checksum = md5::compute(&contents);
-        println!(
-            "File {:?} with checksum {:x} and {:?}",
-            path, checksum, modified
-        );*/
 
         if duplicit_helper.contains_key(&checksum.clone()) {
             let modified_prev = files_mod[&checksum];
             let path_prev = duplicit_helper[&checksum];
             let to_remove;
 
-            if modified < modified_prev || (modified == modified_prev && path < path_prev) {
-                files_mod.insert(checksum, modified);
+            if modif_time < modified_prev || (modif_time == modified_prev && path < path_prev) {
+                files_mod.insert(checksum, modif_time);
                 duplicit_helper.insert(checksum, path);
                 to_remove = path_prev;
                 println!("{} {}", path.to_string_lossy(), path_prev.to_string_lossy());
@@ -119,7 +108,7 @@ fn main() {
             continue;
         }
 
-        files_mod.insert(checksum, modified);
+        files_mod.insert(checksum, modif_time);
         duplicit_helper.insert(checksum, path);
     }
 }
