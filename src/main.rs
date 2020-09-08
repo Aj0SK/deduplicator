@@ -1,8 +1,6 @@
 extern crate wyhash;
 use wyhash::wyhash;
 
-use std::env;
-
 use queue::Queue;
 use std::collections::HashMap;
 
@@ -49,16 +47,25 @@ fn find_files(root_path: &str) -> (Vec<PathBuf>, std::collections::HashMap<u64, 
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let arguments = std::env::args();
+    let arguments = arguments::parse(arguments).unwrap();
+
     let del: bool = {
-        if args.len() >= 2 && &args[1] == "delete" {
+        let arg = arguments.get::<String>("action");
+        if arg != None && arg.unwrap() == "delete" {
             true
         } else {
             false
         }
     };
 
-    let (res_files, files_sizes) = find_files("data");
+    let mut data_path = String::from("data");
+
+    if arguments.get::<String>("path") != None {
+        data_path = arguments.get::<String>("path").unwrap().clone();
+    }
+
+    let (res_files, files_sizes) = find_files(&data_path);
 
     let mut duplicit_helper: std::collections::HashMap<u64, &std::path::PathBuf> = HashMap::new();
     let mut contents = Vec::new();
