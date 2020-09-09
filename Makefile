@@ -38,5 +38,5 @@ unit_tests: unit_tests_install unit_tests_run
 unit_tests_install:
 	cd test && npm i
 
-unit_tests_run:
+unit_tests_run: deduplicator
 	cd test && npm run test
