@@ -2,7 +2,11 @@ CC = clang++
 CCFLAGS = -O2 -std=c++17 -Wall -fsanitize=address
 TEST_DIR = test
 
-DEDUPLICATOR = --path data --action delete --hash_fun wyhash
+DEFAULTPATH = --path data
+DELETE = --action delete
+HASHWYHASH = --hash_fun wyhash
+HASHDUMMY =  --hash_fun dummy
+
 TIME = time
 
 all: run_test
@@ -22,13 +26,16 @@ create_test_data: test_data_gen
 	./test_data_gen.out data kMaxCount 50
 
 main:
-	$(TIME) ./target/release/deduplicator $(DEDUPLICATOR)
+	$(TIME) ./target/release/deduplicator $(DEFAULTPATH) $(DELETE) $(HASHWYHASH)
 
 main-notime:
-	./target/release/deduplicator $(DEDUPLICATOR)
+	./target/release/deduplicator $(DEFAULTPATH) $(DELETE) $(HASHWYHASH)
 
 main-notime-nodelete:
-	./target/release/deduplicator
+	./target/release/deduplicator $(DEFAULTPATH) $(HASHWYHASH)
+
+main-notime-nodelete-dummyhash:
+	./target/release/deduplicator $(DEFAULTPATH) $(HASHDUMMY)
 
 test_data_gen:
 	$(CC) $(CCFLAGS) $(TEST_DIR)/generate_tree.cpp -o test_data_gen.out
