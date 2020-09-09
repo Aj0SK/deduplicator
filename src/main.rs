@@ -68,11 +68,16 @@ fn main() {
         data_path = arguments.get::<String>("path").unwrap().clone();
     }
 
+    let mut hash_fun = String::from("wyhash");
+
+    if arguments.get::<String>("hash_fun") != None {
+        hash_fun = arguments.get::<String>("hash_fun").unwrap().clone();
+    }
+
     let (res_files, files_sizes) = find_files(&data_path);
 
-    let mut duplicit_helper: std::collections::HashMap<u64, &std::path::PathBuf> = HashMap::new();
-
-    let mut files_mod = HashMap::new();
+    let mut duplicit_helper: HashMap<u64, Vec<&std::path::PathBuf>> = HashMap::new();
+    let mut files_mod: HashMap<std::path::PathBuf, std::time::SystemTime> = HashMap::new();
 
     for path in res_files.iter() {
         let mut f = File::open(path).unwrap();
@@ -88,24 +93,32 @@ fn main() {
         let checksum = {
             let mut contents = Vec::new();
             f.read_to_end(&mut contents).unwrap();
-            wyhash(&contents, 3)
+            if hash_fun == "dummy" {
+                (contents.len() as u64) % 3
+            } else {
+                wyhash(&contents, 3)
+            }
         };
 
         drop(f);
 
-        if duplicit_helper.contains_key(&checksum.clone())
-            && check_file_eq(duplicit_helper[&checksum], path)
-        {
-            let modified_prev = files_mod[&checksum];
-            let path_prev = duplicit_helper[&checksum];
+        let mut is_duplicate: bool = false;
+
+        for i in 0..duplicit_helper.entry(checksum).or_default().len() {
+            if !check_file_eq(duplicit_helper[&checksum][i], path) {
+                continue;
+            }
+            is_duplicate = true;
+            let path_prev = duplicit_helper[&checksum][i];
+            let modified_prev = files_mod[path_prev];
             let to_remove;
 
             if modif_time < modified_prev
                 || (modif_time == modified_prev
                     && path.file_name().unwrap() < path_prev.file_name().unwrap())
             {
-                files_mod.insert(checksum, modif_time);
-                duplicit_helper.insert(checksum, path);
+                files_mod.insert(path_prev.to_path_buf(), modif_time);
+                duplicit_helper.entry(checksum).or_default()[i] = path;
                 to_remove = path_prev;
                 println!("{} {}", path.to_string_lossy(), path_prev.to_string_lossy());
             } else {
@@ -116,10 +129,12 @@ fn main() {
             if del {
                 remove_verbose(to_remove);
             }
-            continue;
+            break;
         }
 
-        files_mod.insert(checksum, modif_time);
-        duplicit_helper.insert(checksum, path);
+        if !is_duplicate {
+            files_mod.insert(path.to_path_buf(), modif_time);
+            duplicit_helper.entry(checksum).or_default().push(path);
+        }
     }
 }
