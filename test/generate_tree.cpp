@@ -27,9 +27,8 @@ std::map<string, size_t> config = {{"kSeed", 21},
                                    {"kMaxCount", 40},
                                    {"kStopRatio", 3},
                                    {"kFileMinSizeBlocks", 128},
-                                   {"kFileMaxSizeBlocks", 256}};
-
-const string blockSize("1K");
+                                   {"kFileMaxSizeBlocks", 256},
+                                   {"kBlockSize", 1024}}; // 1'048'576}};
 
 struct DirTreeNode
 {
@@ -55,13 +54,15 @@ void create_file(const string& path, std::mt19937& gen, int type = 0)
   }
   else if (type == 1)
   {
-    string command = "/bin/dd if=/dev/urandom of=" + path + " bs=" + blockSize +
+    string command = "/bin/dd if=/dev/urandom of=" + path +
+                     " bs=" + to_string(config["kBlockSize"]) +
                      " count=" + to_string(size);
     std::system(command.c_str());
   }
   else
   {
-    string command = "/bin/dd if=/dev/zero of=" + path + " bs=" + blockSize +
+    string command = "/bin/dd if=/dev/zero of=" + path +
+                     " bs=" + to_string(config["kBlockSize"]) +
                      " count=" + to_string(size);
     std::system(command.c_str());
   }
