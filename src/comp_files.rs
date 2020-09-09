@@ -2,8 +2,9 @@ extern crate page_size;
 
 use std::fs::{self, File};
 use std::io::prelude::*;
+use std::path::PathBuf;
 
-pub fn add(path1: &String, path2: &String) -> bool {
+pub fn check_file_eq(path1: &PathBuf, path2: &PathBuf) -> bool {
     let bytes_per_block = page_size::get();
 
     let mut f1 = File::open(path1).unwrap();
@@ -30,8 +31,8 @@ pub fn add(path1: &String, path2: &String) -> bool {
         }
     }
 
-    f1.read_exact(&mut buf1);
-    f2.read_exact(&mut buf2);
+    f1.read_to_end(&mut buf1);
+    f2.read_to_end(&mut buf2);
 
     return buf1 == buf2;
 }

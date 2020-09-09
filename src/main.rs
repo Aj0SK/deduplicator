@@ -2,7 +2,7 @@ extern crate wyhash;
 use wyhash::wyhash;
 
 pub mod comp_files;
-use crate::comp_files::add;
+use crate::comp_files::check_file_eq;
 
 use queue::Queue;
 use std::collections::HashMap;
@@ -71,14 +71,11 @@ fn main() {
     let (res_files, files_sizes) = find_files(&data_path);
 
     let mut duplicit_helper: std::collections::HashMap<u64, &std::path::PathBuf> = HashMap::new();
-    let mut contents = Vec::new();
 
     let mut files_mod = HashMap::new();
 
     for path in res_files.iter() {
-        contents.clear();
         let mut f = File::open(path).unwrap();
-        f.read_to_end(&mut contents).unwrap();
 
         let metadata = f.metadata().unwrap();
         let modif_time = metadata.modified().unwrap();
@@ -88,9 +85,17 @@ fn main() {
             continue;
         }
 
-        let checksum = wyhash(&contents, 3);
+        let checksum = {
+            let mut contents = Vec::new();
+            f.read_to_end(&mut contents).unwrap();
+            wyhash(&contents, 3)
+        };
 
-        if duplicit_helper.contains_key(&checksum.clone()) {
+        drop(f);
+
+        if duplicit_helper.contains_key(&checksum.clone())
+            && check_file_eq(duplicit_helper[&checksum], path)
+        {
             let modified_prev = files_mod[&checksum];
             let path_prev = duplicit_helper[&checksum];
             let to_remove;
