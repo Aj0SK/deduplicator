@@ -2,7 +2,7 @@ CC = clang++
 CCFLAGS = -O2 -std=c++17 -Wall -fsanitize=address
 TEST_DIR = test
 
-DEDUPLICATOR = --path data --action delete
+DEDUPLICATOR = --path data --action delete --hash_fun wyhash
 TIME = time
 
 all: run_test

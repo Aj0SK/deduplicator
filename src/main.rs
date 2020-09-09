@@ -62,17 +62,13 @@ fn main() {
         }
     };
 
-    let mut data_path = String::from("data");
+    let data_path = arguments
+        .get::<String>("path")
+        .unwrap_or("data".to_string());
 
-    if arguments.get::<String>("path") != None {
-        data_path = arguments.get::<String>("path").unwrap().clone();
-    }
-
-    let mut hash_fun = String::from("wyhash");
-
-    if arguments.get::<String>("hash_fun") != None {
-        hash_fun = arguments.get::<String>("hash_fun").unwrap().clone();
-    }
+    let hash_fun = arguments
+        .get::<String>("hash_fun")
+        .unwrap_or("wyhash".to_string());
 
     let (res_files, files_sizes) = find_files(&data_path);
 
