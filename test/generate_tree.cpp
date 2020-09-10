@@ -26,7 +26,7 @@ std::map<string, size_t> config = {{"kSeed", 21},
                                    {"kMaxDepth", 4},
                                    {"kMaxCount", 40},
                                    {"kStopRatio", 3},
-                                   {"kMaxDupCount", 1},
+                                   {"kMaxDupCount", 2},
                                    {"kFileMinSizeBlocks", 128},
                                    {"kFileMaxSizeBlocks", 256},
                                    {"kBlockSize", 1024}}; // 1'048'576}};
@@ -90,15 +90,14 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
       if (random == 0 || curr_depth == config["kMaxDepth"])
       {
         string filename = to_string(gen()) + ".txt";
-        int type = gen() % 3;
+        int type = gen() % 2;
 
         string original = curr_path + "/" + filename;
         create_file(original, gen, type);
         curr_root->add_file(std::make_shared<DirTreeNode>(filename, false));
         // add duplicate(s)
 
-        int dup_count =
-            config["kMaxDupCount"]; // gen() % config["kMaxDupCount"];
+        int dup_count = gen() % config["kMaxDupCount"];
 
         if (dup_count == 0)
           break;
