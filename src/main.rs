@@ -10,6 +10,8 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::prelude::*;
 
+use std::time::SystemTime;
+
 use std::path::PathBuf;
 
 fn remove_verbose(path: &PathBuf) {
@@ -72,20 +74,16 @@ fn main() {
     let arguments = std::env::args();
     let arguments = arguments::parse(arguments).unwrap();
 
-    let del: bool = {
-        let arg = arguments.get::<String>("action");
-        if arg != None && arg.unwrap() == "delete" {
-            true
-        } else {
-            false
-        }
-    };
+    let del: bool = arguments
+        .get::<String>("action")
+        .unwrap_or("no".to_string())
+        == "delete";
 
-    let data_path = arguments
+    let data_path: String = arguments
         .get::<String>("path")
         .unwrap_or("data".to_string());
 
-    let hash_fun = arguments
+    let hash_fun: String = arguments
         .get::<String>("hash_fun")
         .unwrap_or("wyhash".to_string());
 
@@ -99,9 +97,9 @@ fn main() {
     for path in res_files.iter() {
         let mut f = File::open(path).unwrap();
 
-        let metadata = f.metadata().unwrap();
-        let modif_time = metadata.modified().unwrap();
-        let file_size = metadata.len();
+        let metadata: std::fs::Metadata = f.metadata().unwrap();
+        let modif_time: SystemTime = metadata.modified().unwrap();
+        let file_size: u64 = metadata.len();
 
         if files_sizes[&file_size] == 1 {
             continue;

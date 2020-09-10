@@ -189,7 +189,8 @@ int main(int argc, char* argv[])
     }
   }
 
-  std::uintmax_t n = fs::remove_all(path);
+  fs::remove_all(path);
+  // std::uintmax_t n = fs::remove_all(path);
   // std::cout << "Deleted " << n << " files or
   // directories\n";
 
