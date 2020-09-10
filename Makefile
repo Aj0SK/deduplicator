@@ -1,8 +1,9 @@
 CC = clang++
 CCFLAGS = -O2 -std=c++17 -Wall -fsanitize=address
-RUST_FLAGS =  --release
+RUST_FLAGS = --release
 TEST_DIR = test
 
+CREATE_DATA_CPP = kMaxCount 50
 DEFAULTPATH = --path data
 DELETE = --action delete
 HASHWYHASH = --hash_fun wyhash
@@ -24,7 +25,7 @@ deduplicator:
 	cargo build $(RUST_FLAGS)
 
 create_test_data: test_data_gen
-	./test_data_gen.out data kMaxCount 50
+	./test_data_gen.out data $(CREATE_DATA_CPP)
 
 main:
 	$(TIME) ./target/release/deduplicator $(DEFAULTPATH) $(DELETE) $(HASHWYHASH)

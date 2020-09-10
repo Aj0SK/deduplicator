@@ -24,13 +24,13 @@ fn print_duplicate(
     path_orig: &PathBuf,
     path_dup: &PathBuf,
     dup_result: &mut Vec<Vec<PathBuf>>,
-    dup_res: &mut HashMap<PathBuf, u64>,
+    dup_res_index: &mut HashMap<PathBuf, u64>,
 ) {
-    if !dup_res.contains_key(path_orig) {
-        dup_res.insert(path_orig.to_path_buf(), dup_result.len() as u64);
+    if !dup_res_index.contains_key(path_orig) {
+        dup_res_index.insert(path_orig.to_path_buf(), dup_result.len() as u64);
         dup_result.push(vec![path_orig.clone()]);
     }
-    let index: usize = dup_res[path_orig] as usize;
+    let index: usize = dup_res_index[path_orig] as usize;
     dup_result[index].push(path_dup.clone());
     if remove_orig {
         let last: usize = dup_result[index].len();
@@ -92,7 +92,7 @@ fn main() {
     let mut duplicit_helper: HashMap<u64, Vec<&PathBuf>> = HashMap::new();
     let mut files_mod: HashMap<PathBuf, std::time::SystemTime> = HashMap::new();
     let mut dup_result: Vec<Vec<PathBuf>> = Vec::new();
-    let mut dup_res: HashMap<PathBuf, u64> = HashMap::new();
+    let mut dup_res_index: HashMap<PathBuf, u64> = HashMap::new();
 
     for path in res_files.iter() {
         let mut f = File::open(path).unwrap();
@@ -135,10 +135,10 @@ fn main() {
                 files_mod.insert(path.to_path_buf(), modif_time);
                 duplicit_helper.entry(checksum).or_default()[i] = path;
                 to_remove = path_prev;
-                print_duplicate(true, path_prev, path, &mut dup_result, &mut dup_res);
+                print_duplicate(true, path_prev, path, &mut dup_result, &mut dup_res_index);
             } else {
                 to_remove = path;
-                print_duplicate(false, path_prev, path, &mut dup_result, &mut dup_res);
+                print_duplicate(false, path_prev, path, &mut dup_result, &mut dup_res_index);
             }
 
             if del {
