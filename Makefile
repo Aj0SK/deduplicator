@@ -1,22 +1,19 @@
 CC = clang++
 CCFLAGS = -O2 -std=c++17 -Wall -fsanitize=address
 RUST_FLAGS = --release
-TEST_DIR = test
+TIME = time
 
+TEST_DIR = test
 CREATE_DATA_CPP = kMaxCount 50
 DEFAULTPATH = --path data
 DELETE = --action delete
 HASHWYHASH = --hash_fun wyhash
 HASHDUMMY =  --hash_fun dummy
 
-TIME = time
-
 all: run_test
 
-reformat: reformat_rust
+reformat:
 	clang-format -i -style=file $(TEST_DIR)/*.cpp
-
-reformat_rust:
 	cargo fmt
 
 run_test: create_test_data deduplicator main
@@ -26,6 +23,9 @@ deduplicator:
 
 create_test_data: test_data_gen
 	./test_data_gen.out data $(CREATE_DATA_CPP)
+
+test_data_gen:
+	$(CC) $(CCFLAGS) $(TEST_DIR)/generate_tree.cpp -o test_data_gen.out
 
 main:
 	$(TIME) ./target/release/deduplicator $(DEFAULTPATH) $(DELETE) $(HASHWYHASH)
@@ -38,9 +38,6 @@ main-notime-nodelete:
 
 main-notime-nodelete-dummyhash:
 	./target/release/deduplicator $(DEFAULTPATH) $(HASHDUMMY)
-
-test_data_gen:
-	$(CC) $(CCFLAGS) $(TEST_DIR)/generate_tree.cpp -o test_data_gen.out
 
 unit_tests: unit_tests_install unit_tests_run
 
