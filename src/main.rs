@@ -17,7 +17,26 @@ fn remove_verbose(path: &PathBuf) {
     fs::remove_file(path).expect("Problem with file deleting.");
 }
 
-fn find_files(root_path: &str) -> (Vec<PathBuf>, std::collections::HashMap<u64, u64>) {
+fn print_duplicate(
+    remove_orig: bool,
+    path_orig: &PathBuf,
+    path_dup: &PathBuf,
+    dup_result: &mut Vec<Vec<PathBuf>>,
+    dup_res: &mut HashMap<PathBuf, u64>,
+) {
+    if !dup_res.contains_key(path_orig) {
+        dup_res.insert(path_orig.to_path_buf(), dup_result.len() as u64);
+        dup_result.push(vec![path_orig.clone()]);
+    }
+    let index: usize = dup_res[path_orig] as usize;
+    dup_result[index].push(path_dup.clone());
+    if remove_orig {
+        let last: usize = dup_result[index].len();
+        dup_result[index].swap(0, last - 1);
+    }
+}
+
+fn find_files(root_path: &str) -> (Vec<PathBuf>, HashMap<u64, u64>) {
     let root_path = PathBuf::from(root_path);
 
     let mut q = Queue::new();
@@ -72,8 +91,10 @@ fn main() {
 
     let (res_files, files_sizes) = find_files(&data_path);
 
-    let mut duplicit_helper: HashMap<u64, Vec<&std::path::PathBuf>> = HashMap::new();
-    let mut files_mod: HashMap<std::path::PathBuf, std::time::SystemTime> = HashMap::new();
+    let mut duplicit_helper: HashMap<u64, Vec<&PathBuf>> = HashMap::new();
+    let mut files_mod: HashMap<PathBuf, std::time::SystemTime> = HashMap::new();
+    let mut dup_result: Vec<Vec<PathBuf>> = Vec::new();
+    let mut dup_res: HashMap<PathBuf, u64> = HashMap::new();
 
     for path in res_files.iter() {
         let mut f = File::open(path).unwrap();
@@ -116,10 +137,10 @@ fn main() {
                 files_mod.insert(path_prev.to_path_buf(), modif_time);
                 duplicit_helper.entry(checksum).or_default()[i] = path;
                 to_remove = path_prev;
-                println!("{} {}", path.to_string_lossy(), path_prev.to_string_lossy());
+                print_duplicate(true, path_prev, path, &mut dup_result, &mut dup_res);
             } else {
                 to_remove = path;
-                println!("{} {}", path_prev.to_string_lossy(), path.to_string_lossy());
+                print_duplicate(false, path_prev, path, &mut dup_result, &mut dup_res);
             }
 
             if del {
@@ -132,5 +153,13 @@ fn main() {
             files_mod.insert(path.to_path_buf(), modif_time);
             duplicit_helper.entry(checksum).or_default().push(path);
         }
+    }
+
+    for i in dup_result.iter() {
+        print!("{}", i[0].to_string_lossy());
+        for j in 1..(i.len()) {
+            print!(" {}", i[j].to_string_lossy());
+        }
+        println!();
     }
 }
