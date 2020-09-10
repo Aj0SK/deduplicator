@@ -99,7 +99,7 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
         string filename_dup = to_string(gen()) + ".txt";
         string duplicate = curr_path + "/" + filename_dup;
 
-        std::this_thread::sleep_for(100ms);
+        std::this_thread::sleep_for(10ms);
 
         fs::copy(original, duplicate);
         curr_root->add_file(std::make_shared<DirTreeNode>(filename_dup, false));
@@ -168,6 +168,11 @@ int main(int argc, char* argv[])
     {
       size_t value = static_cast<size_t>(std::stoull(argv[i + 1]));
       config[arg_name] = value;
+    }
+    else
+    {
+      std::cerr << "Parameter with unknown name. Exiting!" << endl;
+      return 1;
     }
   }
 
