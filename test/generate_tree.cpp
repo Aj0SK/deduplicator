@@ -57,14 +57,14 @@ void create_file(const string& path, std::mt19937& gen, int type = 0)
   {
     string command = "/bin/dd if=/dev/urandom of=" + path +
                      " bs=" + to_string(config["kBlockSize"]) +
-                     " count=" + to_string(size);
+                     " count=" + to_string(size) + "> /dev/null 2>&1";
     std::system(command.c_str());
   }
   else
   {
     string command = "/bin/dd if=/dev/zero of=" + path +
                      " bs=" + to_string(config["kBlockSize"]) +
-                     " count=" + to_string(size);
+                     " count=" + to_string(size) + "> /dev/null 2>&1";
     std::system(command.c_str());
   }
 
