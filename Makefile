@@ -1,5 +1,6 @@
 CC = clang++
 CCFLAGS = -O2 -std=c++17 -Wall -fsanitize=address
+RUST_FLAGS =  --release
 TEST_DIR = test
 
 DEFAULTPATH = --path data
@@ -20,7 +21,7 @@ reformat_rust:
 run_test: create_test_data deduplicator main
 
 deduplicator:
-	cargo build --release
+	cargo build $(RUST_FLAGS)
 
 create_test_data: test_data_gen
 	./test_data_gen.out data kMaxCount 50

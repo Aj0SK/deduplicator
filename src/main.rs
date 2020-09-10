@@ -134,7 +134,7 @@ fn main() {
                 || (modif_time == modified_prev
                     && path.file_name().unwrap() < path_prev.file_name().unwrap())
             {
-                files_mod.insert(path_prev.to_path_buf(), modif_time);
+                files_mod.insert(path.to_path_buf(), modif_time);
                 duplicit_helper.entry(checksum).or_default()[i] = path;
                 to_remove = path_prev;
                 print_duplicate(true, path_prev, path, &mut dup_result, &mut dup_res);
