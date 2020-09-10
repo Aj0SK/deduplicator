@@ -101,7 +101,7 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
             config["kMaxDupCount"]; // gen() % config["kMaxDupCount"];
 
         if (dup_count == 0)
-          continue;
+          break;
 
         cout << original;
 
