@@ -1,5 +1,8 @@
+extern crate page_size;
 extern crate wyhash;
-use wyhash::wyhash;
+
+use core::hash::Hasher;
+use wyhash::WyHash;
 
 pub mod comp_files;
 use crate::comp_files::check_file_eq;
@@ -70,6 +73,26 @@ fn find_files(root_path: &str) -> (Vec<PathBuf>, HashMap<u64, u64>) {
     (res_files, files_sizes)
 }
 
+fn get_hash(f: &mut File) -> u64 {
+    let mut hasher = WyHash::with_seed(3);
+    let meta = f.metadata().unwrap();
+    let size = meta.len();
+
+    let bytes_per_block = page_size::get();
+
+    let mut buf = vec![0u8; bytes_per_block];
+
+    for i in 0..(size as usize / bytes_per_block) {
+        f.read_exact(&mut buf);
+        hasher.write(&buf);
+    }
+
+    f.read_to_end(&mut buf);
+    hasher.write(&buf);
+
+    hasher.finish()
+}
+
 fn main() {
     let arguments = std::env::args();
     let arguments = arguments::parse(arguments).unwrap();
@@ -106,12 +129,10 @@ fn main() {
         }
 
         let checksum = {
-            let mut contents = Vec::new();
-            f.read_to_end(&mut contents).unwrap();
             if hash_fun == "dummy" {
-                (contents.len() as u64) % 3
+                (file_size as u64) % 3
             } else {
-                wyhash(&contents, 3)
+                get_hash(&mut f)
             }
         };
 
