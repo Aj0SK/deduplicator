@@ -99,7 +99,7 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
         // add duplicate(s)
 
         size_t dup_count = gen() % (config["kMaxDupCount"] + 1);
-        dup_count = std::min(dup_count, config["kMaxCount"] - dup_count);
+        dup_count = std::min(dup_count, config["kMaxCount"] - created_files);
 
         if (dup_count == 0)
           break;
