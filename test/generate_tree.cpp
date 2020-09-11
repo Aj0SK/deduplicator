@@ -2,11 +2,11 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <unordered_map>
 #include <memory>
 #include <random>
 #include <string>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace fs = std::filesystem;
@@ -22,15 +22,17 @@ using std::string_view;
 using std::to_string;
 using std::vector;
 
-std::unordered_map<string_view, size_t>& GetConfig() {
-  static auto* config = new std::unordered_map<string_view, size_t>({{"kSeed", 21},
-                                   {"kMaxDepth", 4},
-                                   {"kMaxCount", 40},
-                                   {"kStopRatio", 3},
-                                   {"kMaxDupCount", 1},
-                                   {"kFileMinSizeBlocks", 128},
-                                   {"kFileMaxSizeBlocks", 256},
-                                   {"kBlockSize", 1024}}); // 1'048'576}};
+std::unordered_map<string_view, size_t>& GetConfig()
+{
+  static auto* config = new std::unordered_map<string_view, size_t>(
+      {{"kSeed", 21},
+       {"kMaxDepth", 4},
+       {"kMaxCount", 40},
+       {"kStopRatio", 3},
+       {"kMaxDupCount", 1},
+       {"kFileMinSizeBlocks", 128},
+       {"kFileMaxSizeBlocks", 256},
+       {"kBlockSize", 1024}}); // 1'048'576}};
   return *config;
 }
 
@@ -41,12 +43,13 @@ struct DirTreeNode
   vector<DirTreeNode> dirs = {};
   vector<DirTreeNode> files = {};
   DirTreeNode(string name, bool is_directory)
-      : name(std::move(name)), directory(is_directory) {};
+      : name(std::move(name)), directory(is_directory){};
   void add_desc(DirTreeNode&& x) { dirs.push_back(std::move(x)); };
   void add_file(DirTreeNode&& x) { files.push_back(std::move(x)); };
 };
 
-enum class FileType : int {
+enum class FileType : int
+{
   Small,
   Random,
   Zero,
@@ -54,7 +57,7 @@ enum class FileType : int {
   MaxType,
 };
 
-template<typename T>
+template <typename T>
 void create_file(const string& path, T& gen, FileType type)
 {
   ofstream f(path);
@@ -62,27 +65,28 @@ void create_file(const string& path, T& gen, FileType type)
   int size = gen() % (config["kFileMaxSizeBlocks"] + 1 -
                       config["kFileMinSizeBlocks"]) +
              config["kFileMinSizeBlocks"];
-  switch (type) {
-    case FileType::Small:
-      f << std::uniform_int_distribution<size_t>()(gen);
-      break;
-    case FileType::Random:
-      {
-        string command = "/bin/dd if=/dev/urandom of=" + path +
-                         " bs=" + to_string(config["kBlockSize"]) +
-                         " count=" + to_string(size) + "> /dev/null 2>&1";
-        std::system(command.c_str());
-      }
-      break;
-    case FileType::Zero:
-      {
-        string command = "/bin/dd if=/dev/zero of=" + path +
-                         " bs=" + to_string(config["kBlockSize"]) +
-                         " count=" + to_string(size) + "> /dev/null 2>&1";
-        std::system(command.c_str());
-      }
-      break;
-    default:
+  switch (type)
+  {
+  case FileType::Small:
+    f << std::uniform_int_distribution<size_t>()(gen);
+    break;
+  case FileType::Random:
+  {
+    string command = "/bin/dd if=/dev/urandom of=" + path +
+                     " bs=" + to_string(config["kBlockSize"]) +
+                     " count=" + to_string(size) + "> /dev/null 2>&1";
+    std::system(command.c_str());
+  }
+  break;
+  case FileType::Zero:
+  {
+    string command = "/bin/dd if=/dev/zero of=" + path +
+                     " bs=" + to_string(config["kBlockSize"]) +
+                     " count=" + to_string(size) + "> /dev/null 2>&1";
+    std::system(command.c_str());
+  }
+  break;
+  default:
     throw string("Unkonwn FileType");
   }
   f.close();
@@ -104,11 +108,14 @@ DirTreeNode create_tree(const string& root_dir)
 
     while (1)
     {
-      int random = std::uniform_int_distribution<size_t>(0, config["kStopRatio"])(gen);
+      int random =
+          std::uniform_int_distribution<size_t>(0, config["kStopRatio"])(gen);
       if (random == 0 || curr_depth == config["kMaxDepth"])
       {
-        string filename = to_string(std::uniform_int_distribution<size_t>()(gen)) + ".txt";
-        int type = std::uniform_int_distribution<int>(0, static_cast<int>(FileType::MaxType) - 1)(gen);
+        string filename =
+            to_string(std::uniform_int_distribution<size_t>()(gen)) + ".txt";
+        int type = std::uniform_int_distribution<int>(
+            0, static_cast<int>(FileType::MaxType) - 1)(gen);
 
         string original = curr_root->name + "/" + filename;
         create_file(original, gen, static_cast<FileType>(type));
@@ -116,7 +123,8 @@ DirTreeNode create_tree(const string& root_dir)
         ++created_files;
         // add duplicate(s)
 
-        size_t dup_count = std::uniform_int_distribution<size_t>(0, config["kMaxDupCount"])(gen);
+        size_t dup_count = std::uniform_int_distribution<size_t>(
+            0, config["kMaxDupCount"])(gen);
         dup_count = std::min(dup_count, config["kMaxCount"] - dup_count);
 
         if (dup_count == 0)
@@ -141,7 +149,8 @@ DirTreeNode create_tree(const string& root_dir)
         break;
       }
 
-      int dir = std::uniform_int_distribution<size_t>(0, curr_root->dirs.size())(gen);
+      int dir =
+          std::uniform_int_distribution<size_t>(0, curr_root->dirs.size())(gen);
       if (dir == curr_root->dirs.size())
       {
         fs::create_directory(curr_root->name + "/" + to_string(created_files));
@@ -220,4 +229,3 @@ int main(int argc, char* argv[])
 
   return 0;
 }
-
