@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <random>
 #include <string>
@@ -15,91 +15,109 @@ using namespace std::chrono_literals;
 
 using std::cin;
 using std::cout;
-using std::endl;
 using std::ofstream;
 using std::shared_ptr;
 using std::string;
+using std::string_view;
 using std::to_string;
 using std::vector;
 
-std::map<string, size_t> config = {{"kSeed", 21},
+std::unordered_map<string_view, size_t>& GetConfig() {
+  static auto* config = new std::unordered_map<string_view, size_t>({{"kSeed", 21},
                                    {"kMaxDepth", 4},
                                    {"kMaxCount", 40},
                                    {"kStopRatio", 3},
                                    {"kMaxDupCount", 1},
                                    {"kFileMinSizeBlocks", 128},
                                    {"kFileMaxSizeBlocks", 256},
-                                   {"kBlockSize", 1024}}; // 1'048'576}};
+                                   {"kBlockSize", 1024}}); // 1'048'576}};
+  return *config;
+}
 
 struct DirTreeNode
 {
   string name;
   bool directory = false;
-  vector<shared_ptr<DirTreeNode>> dirs = {};
-  vector<shared_ptr<DirTreeNode>> files = {};
-  DirTreeNode(const string& name, bool is_directory)
-      : name(name), directory(is_directory){};
-  void add_desc(shared_ptr<DirTreeNode>&& x) { dirs.push_back(std::move(x)); };
-  void add_file(shared_ptr<DirTreeNode>&& x) { files.push_back(std::move(x)); };
+  vector<DirTreeNode> dirs = {};
+  vector<DirTreeNode> files = {};
+  DirTreeNode(string name, bool is_directory)
+      : name(std::move(name)), directory(is_directory) {};
+  void add_desc(DirTreeNode&& x) { dirs.push_back(std::move(x)); };
+  void add_file(DirTreeNode&& x) { files.push_back(std::move(x)); };
 };
 
-void create_file(const string& path, std::mt19937& gen, int type = 0)
+enum class FileType : int {
+  Small,
+  Random,
+  Zero,
+  // Keep last
+  MaxType,
+};
+
+template<typename T>
+void create_file(const string& path, T& gen, FileType type)
 {
   ofstream f(path);
+  auto& config = GetConfig();
   int size = gen() % (config["kFileMaxSizeBlocks"] + 1 -
                       config["kFileMinSizeBlocks"]) +
              config["kFileMinSizeBlocks"];
-  if (type == 0)
-  {
-    f << gen();
+  switch (type) {
+    case FileType::Small:
+      f << std::uniform_int_distribution<size_t>()(gen);
+      break;
+    case FileType::Random:
+      {
+        string command = "/bin/dd if=/dev/urandom of=" + path +
+                         " bs=" + to_string(config["kBlockSize"]) +
+                         " count=" + to_string(size) + "> /dev/null 2>&1";
+        std::system(command.c_str());
+      }
+      break;
+    case FileType::Zero:
+      {
+        string command = "/bin/dd if=/dev/zero of=" + path +
+                         " bs=" + to_string(config["kBlockSize"]) +
+                         " count=" + to_string(size) + "> /dev/null 2>&1";
+        std::system(command.c_str());
+      }
+      break;
+    default:
+    throw string("Unkonwn FileType");
   }
-  else if (type == 1)
-  {
-    string command = "/bin/dd if=/dev/urandom of=" + path +
-                     " bs=" + to_string(config["kBlockSize"]) +
-                     " count=" + to_string(size) + "> /dev/null 2>&1";
-    std::system(command.c_str());
-  }
-  else
-  {
-    string command = "/bin/dd if=/dev/zero of=" + path +
-                     " bs=" + to_string(config["kBlockSize"]) +
-                     " count=" + to_string(size) + "> /dev/null 2>&1";
-    std::system(command.c_str());
-  }
-
   f.close();
 }
 
-shared_ptr<DirTreeNode> create_tree(const string& root_dir)
+DirTreeNode create_tree(const string& root_dir)
 {
+  auto& config = GetConfig();
   std::mt19937 gen(config["kSeed"]);
 
-  shared_ptr<DirTreeNode> root = std::make_shared<DirTreeNode>(root_dir, true);
+  DirTreeNode root(root_dir, true);
   fs::create_directory(root_dir);
 
-  for (size_t created_files = 0; created_files < config["kMaxCount"];)
+  size_t created_files = 0;
+  while (created_files < config["kMaxCount"])
   {
-    auto curr_root = root;
+    auto* curr_root = &root;
     int curr_depth = 0;
-    string curr_path = root_dir;
 
     while (1)
     {
-      int random = gen() % config["kStopRatio"];
+      int random = std::uniform_int_distribution<size_t>(0, config["kStopRatio"])(gen);
       if (random == 0 || curr_depth == config["kMaxDepth"])
       {
-        string filename = to_string(gen()) + ".txt";
-        int type = gen() % 2;
+        string filename = to_string(std::uniform_int_distribution<size_t>()(gen)) + ".txt";
+        int type = std::uniform_int_distribution<int>(0, static_cast<int>(FileType::MaxType) - 1)(gen);
 
-        string original = curr_path + "/" + filename;
-        create_file(original, gen, type);
-        curr_root->add_file(std::make_shared<DirTreeNode>(filename, false));
+        string original = curr_root->name + "/" + filename;
+        create_file(original, gen, static_cast<FileType>(type));
+        curr_root->add_file(DirTreeNode(filename, false));
         ++created_files;
         // add duplicate(s)
 
-        size_t dup_count = gen() % (config["kMaxDupCount"] + 1);
-        dup_count = std::min(dup_count, config["kMaxCount"] - created_files);
+        size_t dup_count = std::uniform_int_distribution<size_t>(0, config["kMaxDupCount"])(gen);
+        dup_count = std::min(dup_count, config["kMaxCount"] - dup_count);
 
         if (dup_count == 0)
           break;
@@ -111,51 +129,48 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
         for (int i = 0; i < dup_count; ++i)
         {
           string filename_dup = to_string(gen()) + ".txt";
-          string duplicate = curr_path + "/" + filename_dup;
+          string duplicate = curr_root->name + "/" + filename_dup;
 
           fs::copy(original, duplicate);
-          curr_root->add_file(
-              std::make_shared<DirTreeNode>(filename_dup, false));
+          curr_root->add_file(DirTreeNode(filename_dup, false));
           cout << " " << duplicate;
         }
 
-        cout << endl;
+        cout << "\n";
 
         break;
       }
 
-      int dir = gen() % (curr_root->dirs.size() + 1);
+      int dir = std::uniform_int_distribution<size_t>(0, curr_root->dirs.size())(gen);
       if (dir == curr_root->dirs.size())
       {
-        fs::create_directory(curr_path + "/" + to_string(created_files));
-        curr_root->add_desc(
-            std::make_shared<DirTreeNode>(to_string(created_files), true));
+        fs::create_directory(curr_root->name + "/" + to_string(created_files));
+        curr_root->add_desc(DirTreeNode(to_string(created_files), true));
       }
       ++curr_depth;
-      curr_path += "/" + curr_root->dirs[dir]->name;
-      curr_root = curr_root->dirs[dir];
+      curr_root = &curr_root->dirs[dir];
     }
   }
 
   return root;
 }
 
-void print_tree(shared_ptr<DirTreeNode> root_dir, int tabs = 0)
+void print_tree(const DirTreeNode& root_dir, int tabs = 0)
 {
   string spaces(tabs, '\t');
   cout << spaces;
-  if (root_dir->directory)
-    cout << root_dir->name << " dir: " << endl;
+  if (root_dir.directory)
+    cout << root_dir.name << " dir: \n";
   else
-    cout << root_dir->name << endl;
+    cout << root_dir.name << "\n";
 
-  for (const auto& x : root_dir->files)
+  for (const auto& x : root_dir.files)
   {
     cout << spaces << '\t';
-    cout << "File " << x->name << endl;
+    cout << "File " << x.name << "\n";
   }
 
-  for (const auto& x : root_dir->dirs)
+  for (const auto& x : root_dir.dirs)
   {
     print_tree(x, tabs + 1);
   }
@@ -166,17 +181,18 @@ int main(int argc, char* argv[])
   // not sure of performance benefits
   // ios_base::sync_with_stdio(false);
 
-  string path = "data";
-
-  if (argc < 2)
+  if (argc < 2 || (argc % 2) == 1)
   {
     std::cerr << "Bad number of params. Usage is " << argv[0] << " data_dir "
-              << endl;
+              << "[arg_name arg_value]*\n";
     return 1;
   }
 
-  path = argv[1];
-
+  auto& config = GetConfig();
+  {
+    std::random_device rd;
+    config["kSeed"] = std::uniform_int_distribution<size_t>()(rd);
+  }
   for (size_t i = 2; i < argc; i += 2)
   {
     string arg_name(argv[i]);
@@ -187,11 +203,12 @@ int main(int argc, char* argv[])
     }
     else
     {
-      std::cerr << "Parameter with unknown name. Exiting!" << endl;
+      std::cerr << "Parameter with unknown name. Exiting!\n";
       return 1;
     }
   }
 
+  string path = argv[1];
   fs::remove_all(path);
   // std::uintmax_t n = fs::remove_all(path);
   // std::cout << "Deleted " << n << " files or
@@ -203,3 +220,4 @@ int main(int argc, char* argv[])
 
   return 0;
 }
+
