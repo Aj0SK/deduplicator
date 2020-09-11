@@ -52,7 +52,7 @@ enum class FileType : int
 {
   Small,
   Random,
-  Zero,
+  // Zero,
   // Keep last
   MaxType,
 };
@@ -78,14 +78,14 @@ void create_file(const string& path, T& gen, FileType type)
     std::system(command.c_str());
   }
   break;
-  case FileType::Zero:
+  /*case FileType::Zero:
   {
     string command = "/bin/dd if=/dev/zero of=" + path +
                      " bs=" + to_string(config["kBlockSize"]) +
                      " count=" + to_string(size) + "> /dev/null 2>&1";
     std::system(command.c_str());
   }
-  break;
+  break;*/
   default:
     throw string("Unkonwn FileType");
   }
@@ -105,6 +105,7 @@ DirTreeNode create_tree(const string& root_dir)
   {
     auto* curr_root = &root;
     int curr_depth = 0;
+    string curr_path = root_dir;
 
     while (1)
     {
@@ -117,7 +118,7 @@ DirTreeNode create_tree(const string& root_dir)
         int type = std::uniform_int_distribution<int>(
             0, static_cast<int>(FileType::MaxType) - 1)(gen);
 
-        string original = curr_root->name + "/" + filename;
+        string original = curr_path + "/" + filename;
         create_file(original, gen, static_cast<FileType>(type));
         curr_root->add_file(DirTreeNode(filename, false));
         ++created_files;
@@ -137,7 +138,7 @@ DirTreeNode create_tree(const string& root_dir)
         for (int i = 0; i < dup_count; ++i)
         {
           string filename_dup = to_string(gen()) + ".txt";
-          string duplicate = curr_root->name + "/" + filename_dup;
+          string duplicate = curr_path + "/" + filename_dup;
 
           fs::copy(original, duplicate);
           curr_root->add_file(DirTreeNode(filename_dup, false));
@@ -153,10 +154,11 @@ DirTreeNode create_tree(const string& root_dir)
           std::uniform_int_distribution<size_t>(0, curr_root->dirs.size())(gen);
       if (dir == curr_root->dirs.size())
       {
-        fs::create_directory(curr_root->name + "/" + to_string(created_files));
+        fs::create_directory(curr_path + "/" + to_string(created_files));
         curr_root->add_desc(DirTreeNode(to_string(created_files), true));
       }
       ++curr_depth;
+      curr_path += "/" + curr_root->dirs[dir].name;
       curr_root = &curr_root->dirs[dir];
     }
   }
