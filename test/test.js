@@ -4,7 +4,6 @@ const tap = require('tap');
 
 const mock = x => x.split("").map(x=>Math.random()<1/2?x.toLowerCase():x.toUpperCase()).join("");
 
-const presliTesty = false;
 const fdupesTests = false;
 
 (async () => {
@@ -20,7 +19,7 @@ const fdupesTests = false;
             .split("\n")
             .filter(Boolean)
             .map(x=>x.trim().split(" "))
-            .map(x=>({order:x,sorted:[...x].sort()}))
+            .map(x=>({first:x[0],sorted:[...x].sort()}))
             .sort((a,b) => a.sorted.toString().localeCompare(b.sorted.toString()));
     })();
     if(fdupesTests){
@@ -34,7 +33,7 @@ const fdupesTests = false;
                 .split("\n")
                 .filter(Boolean)
                 .map(x=>x.trim().split(" "))
-                .map(x=>({order:x,sorted: [...x].sort()}))
+                .map(x=>({first:x[0],sorted: [...x].sort()}))
                 .sort((a,b) => a.sorted.toString().localeCompare(b.sorted.toString()));
         })();
 
@@ -49,7 +48,7 @@ const fdupesTests = false;
             .split("\n")
             .filter(Boolean)
             .map(x=>x.trim().split(" "))
-            .map(x=>({order:x,sorted:[...x].sort()}))
+            .map(x=>({first:x[0],sorted:[...x].sort()}))
             .sort((a,b) => a.sorted.toString().localeCompare(b.sorted.toString()));
     })();
     await (async () => {
@@ -62,7 +61,7 @@ const fdupesTests = false;
             .split("\n")
             .filter(Boolean)
             .map(x=>x.trim().split(" "))
-            .map(x=>({order:x,sorted:[...x].sort()}))
+            .map(x=>({first:x[0],sorted:[...x].sort()}))
             .sort((a,b) => a.sorted.toString().localeCompare(b.sorted.toString()));
     })();
     tap.ok(deduplicatorDummyHashSorted);
@@ -74,14 +73,14 @@ const fdupesTests = false;
     tap.same(cppSorted, deduplicatorDummyHashSorted, "Outputs cppSorted and deduplicatorDummyHashSorted should be equal");
 
     fdupesTests&&deduplicatorSorted.map((entry,index) => tap.same(entry.sorted, fdupesSorted[index].sorted, "entry items should be equal"));
-    fdupesTests&&deduplicatorSorted.map((entry,index) => tap.same(entry.order, fdupesSorted[index].order, "entry order of items should be equal"));
+    fdupesTests&&deduplicatorSorted.map((entry,index) => tap.same(entry.first, fdupesSorted[index].first, "entry first of items should be equal"));
     deduplicatorSorted.map((entry,index) => tap.same(entry.sorted, cppSorted[index].sorted, "entry items should be equal"));
-    deduplicatorSorted.map((entry,index) => tap.same(entry.order, cppSorted[index].order, "entry order of items should be equal"));
+    deduplicatorSorted.map((entry,index) => tap.same(entry.first, cppSorted[index].first, "entry first of items should be equal"));
 
     fdupesTests&&deduplicatorDummyHashSorted.map((entry,index) => tap.same(entry.sorted, fdupesSorted[index].sorted, "entry items should be equal"));
-    fdupesTests&&deduplicatorDummyHashSorted.map((entry,index) => tap.same(entry.order, fdupesSorted[index].order, "entry order of items should be equal"));
+    fdupesTests&&deduplicatorDummyHashSorted.map((entry,index) => tap.same(entry.first, fdupesSorted[index].first, "entry first of items should be equal"));
     deduplicatorDummyHashSorted.map((entry,index) => tap.same(entry.sorted, cppSorted[index].sorted, "entry items should be equal"));
-    deduplicatorDummyHashSorted.map((entry,index) => tap.same(entry.order, cppSorted[index].order, "entry order of items should be equal"));
+    deduplicatorDummyHashSorted.map((entry,index) => tap.same(entry.first, cppSorted[index].first, "entry first of items should be equal"));
 
 
 
