@@ -35,11 +35,11 @@ struct DirTreeNode
 {
   string name;
   bool directory = false;
-  vector<shared_ptr<DirTreeNode>> desc = {};
+  vector<shared_ptr<DirTreeNode>> dirs = {};
   vector<shared_ptr<DirTreeNode>> files = {};
   DirTreeNode(const string& name, bool is_directory)
       : name(name), directory(is_directory){};
-  void add_desc(shared_ptr<DirTreeNode>&& x) { desc.push_back(std::move(x)); };
+  void add_desc(shared_ptr<DirTreeNode>&& x) { dirs.push_back(std::move(x)); };
   void add_file(shared_ptr<DirTreeNode>&& x) { files.push_back(std::move(x)); };
 };
 
@@ -78,7 +78,7 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
   shared_ptr<DirTreeNode> root = std::make_shared<DirTreeNode>(root_dir, true);
   fs::create_directory(root_dir);
 
-  for (size_t i = 0; i < config["kMaxCount"] / 2; ++i)
+  for (size_t created_files = 0; created_files < config["kMaxCount"];)
   {
     auto curr_root = root;
     int curr_depth = 0;
@@ -95,9 +95,11 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
         string original = curr_path + "/" + filename;
         create_file(original, gen, type);
         curr_root->add_file(std::make_shared<DirTreeNode>(filename, false));
+        ++created_files;
         // add duplicate(s)
 
-        int dup_count = gen() % (config["kMaxDupCount"] + 1);
+        size_t dup_count = gen() % (config["kMaxDupCount"] + 1);
+        dup_count = std::min(dup_count, config["kMaxCount"] - dup_count);
 
         if (dup_count == 0)
           break;
@@ -122,15 +124,16 @@ shared_ptr<DirTreeNode> create_tree(const string& root_dir)
         break;
       }
 
-      int dir = gen() % (curr_root->desc.size() + 1);
-      if (dir == curr_root->desc.size())
+      int dir = gen() % (curr_root->dirs.size() + 1);
+      if (dir == curr_root->dirs.size())
       {
-        fs::create_directory(curr_path + "/" + to_string(i));
-        curr_root->add_desc(std::make_shared<DirTreeNode>(to_string(i), true));
+        fs::create_directory(curr_path + "/" + to_string(created_files));
+        curr_root->add_desc(
+            std::make_shared<DirTreeNode>(to_string(created_files), true));
       }
       ++curr_depth;
-      curr_path += "/" + curr_root->desc[dir]->name;
-      curr_root = curr_root->desc[dir];
+      curr_path += "/" + curr_root->dirs[dir]->name;
+      curr_root = curr_root->dirs[dir];
     }
   }
 
@@ -152,7 +155,7 @@ void print_tree(shared_ptr<DirTreeNode> root_dir, int tabs = 0)
     cout << "File " << x->name << endl;
   }
 
-  for (const auto& x : root_dir->desc)
+  for (const auto& x : root_dir->dirs)
   {
     print_tree(x, tabs + 1);
   }
