@@ -82,12 +82,14 @@ fn get_hash(f: &mut File) -> u64 {
 
     let mut buf = vec![0u8; bytes_per_block];
 
-    for i in 0..(size as usize / bytes_per_block) {
-        f.read_exact(&mut buf);
+    for _i in 0..(size as usize / bytes_per_block) {
+        f.read_exact(&mut buf)
+            .expect("Failed to read from the file during hashing.");
         hasher.write(&buf);
     }
 
-    f.read_to_end(&mut buf);
+    f.read_to_end(&mut buf)
+        .expect("Failed to read the end of file during hashing.");
     hasher.write(&buf);
 
     hasher.finish()
@@ -95,12 +97,9 @@ fn get_hash(f: &mut File) -> u64 {
 
 fn main() {
     let arguments = std::env::args();
-    let arguments = arguments::parse(arguments).unwrap();
+    let arguments = arguments::parse(arguments).expect("Unable to parse arguments.");
 
-    let del: bool = arguments
-        .get::<String>("action")
-        .unwrap_or("no".to_string())
-        == "delete";
+    let del: bool = arguments.get::<bool>("delete").unwrap_or(false);
 
     let data_path: String = arguments
         .get::<String>("path")
@@ -110,6 +109,8 @@ fn main() {
         .get::<String>("hash_fun")
         .unwrap_or("wyhash".to_string());
 
+    let print_dup: bool = arguments.get::<bool>("print").unwrap_or(false);
+
     let (res_files, files_sizes) = find_files(&data_path);
 
     let mut duplicit_helper: HashMap<u64, Vec<&PathBuf>> = HashMap::new();
@@ -118,10 +119,12 @@ fn main() {
     let mut dup_res_index: HashMap<PathBuf, u64> = HashMap::new();
 
     for path in res_files.iter() {
-        let mut f = File::open(path).unwrap();
+        let mut f = File::open(path).expect("Unable to open file during deduplication.");
 
-        let metadata: std::fs::Metadata = f.metadata().unwrap();
-        let modif_time: SystemTime = metadata.modified().unwrap();
+        let metadata: std::fs::Metadata = f.metadata().expect("Can't read metadata.");
+        let modif_time: SystemTime = metadata
+            .modified()
+            .expect("Can't read mod time from file metadata.");
         let file_size: u64 = metadata.len();
 
         if files_sizes[&file_size] == 1 {
@@ -151,15 +154,20 @@ fn main() {
 
             if modif_time < modified_prev
                 || (modif_time == modified_prev
-                    && path.file_name().unwrap() < path_prev.file_name().unwrap())
+                    && path.file_name().expect("Can't get file's name.")
+                        < path_prev.file_name().expect("Can't get prev file's name."))
             {
                 files_mod.insert(path.to_path_buf(), modif_time);
                 duplicit_helper.entry(checksum).or_default()[i] = path;
                 to_remove = path_prev;
-                print_duplicate(true, path_prev, path, &mut dup_result, &mut dup_res_index);
+                if print_dup {
+                    print_duplicate(true, path_prev, path, &mut dup_result, &mut dup_res_index);
+                }
             } else {
                 to_remove = path;
-                print_duplicate(false, path_prev, path, &mut dup_result, &mut dup_res_index);
+                if print_dup {
+                    print_duplicate(false, path_prev, path, &mut dup_result, &mut dup_res_index);
+                }
             }
 
             if del {
@@ -174,11 +182,13 @@ fn main() {
         }
     }
 
-    for i in dup_result.iter() {
-        print!("{}", i[0].to_string_lossy());
-        for j in 1..(i.len()) {
-            print!(" {}", i[j].to_string_lossy());
+    if print_dup {
+        for i in dup_result.iter() {
+            print!("{}", i[0].to_string_lossy());
+            for j in 1..(i.len()) {
+                print!(" {}", i[j].to_string_lossy());
+            }
+            println!();
         }
-        println!();
     }
 }

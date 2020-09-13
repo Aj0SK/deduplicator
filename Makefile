@@ -6,7 +6,8 @@ TIME = time
 TEST_DIR = test
 CREATE_DATA_CPP = kMaxCount 50
 DEFAULTPATH = --path data
-DELETE = --action delete
+PRINT = --print
+DELETE = --delete
 HASHWYHASH = --hash_fun wyhash
 HASHDUMMY =  --hash_fun dummy
 
@@ -28,16 +29,16 @@ test_data_gen:
 	$(CC) $(CCFLAGS) $(TEST_DIR)/generate_tree.cpp -o test_data_gen.out
 
 main:
-	$(TIME) ./target/release/deduplicator $(DEFAULTPATH) $(DELETE) $(HASHWYHASH)
+	$(TIME) ./target/release/deduplicator $(DEFAULTPATH) $(PRINT) $(DELETE) $(HASHWYHASH)
 
 main-notime:
-	./target/release/deduplicator $(DEFAULTPATH) $(DELETE) $(HASHWYHASH)
+	./target/release/deduplicator $(DEFAULTPATH) $(PRINT) $(DELETE) $(HASHWYHASH)
 
 main-notime-nodelete:
-	./target/release/deduplicator $(DEFAULTPATH) $(HASHWYHASH)
+	./target/release/deduplicator $(DEFAULTPATH) $(PRINT) $(HASHWYHASH)
 
 main-notime-nodelete-dummyhash:
-	./target/release/deduplicator $(DEFAULTPATH) $(HASHDUMMY)
+	./target/release/deduplicator $(DEFAULTPATH) $(PRINT) $(HASHDUMMY)
 
 unit_tests: unit_tests_install unit_tests_run
 
