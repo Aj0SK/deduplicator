@@ -2,12 +2,12 @@ extern crate page_size;
 extern crate wyhash;
 
 use core::hash::Hasher;
+use walkdir::WalkDir;
 use wyhash::WyHash;
 
 pub mod comp_files;
 use crate::comp_files::check_file_eq;
 
-use queue::Queue;
 use std::collections::HashMap;
 
 use std::fs::{self, File};
@@ -44,29 +44,19 @@ fn print_duplicate(
 fn find_files(root_path: &str) -> (Vec<PathBuf>, HashMap<u64, u64>) {
     let root_path = PathBuf::from(root_path);
 
-    let mut q = Queue::new();
     let mut res_files: Vec<PathBuf> = Vec::new();
     let mut files_sizes = HashMap::new();
 
-    q.queue(root_path)
-        .expect("Error during queue push of root.");
-
-    while q.len() != 0 {
-        let path = q.dequeue().expect("Error during queue pop.");
-        for entry in fs::read_dir(path).expect("Error during listing files.") {
-            let entry = entry.expect("Bad thing.");
-            let new_path = entry.path();
-            if new_path.is_dir() {
-                q.queue(new_path).expect("Error during queue push.");
+    for entry in WalkDir::new(&root_path) {
+        let path = entry.expect("Get entry path.").path().to_path_buf();
+        if !path.is_dir() {
+            let file_size = fs::metadata(&path).unwrap().len();
+            if files_sizes.contains_key(&file_size) {
+                files_sizes.insert(file_size, 2);
             } else {
-                let file_size = fs::metadata(&new_path).unwrap().len();
-                if files_sizes.contains_key(&file_size) {
-                    files_sizes.insert(file_size, 2);
-                } else {
-                    files_sizes.insert(file_size, 1);
-                }
-                res_files.push(new_path);
+                files_sizes.insert(file_size, 1);
             }
+            res_files.push(path);
         }
     }
 
