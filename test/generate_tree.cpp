@@ -126,7 +126,7 @@ DirTreeNode create_tree(const string& root_dir)
 
         size_t dup_count = std::uniform_int_distribution<size_t>(
             0, config["kMaxDupCount"])(gen);
-        dup_count = std::min(dup_count, config["kMaxCount"] - dup_count);
+        dup_count = std::min(dup_count, config["kMaxCount"] - created_files);
 
         if (dup_count == 0)
           break;
