@@ -47,3 +47,6 @@ unit_tests_install:
 
 unit_tests_run: deduplicator
 	cd test && npm run test
+
+unit_tests_run_heavy: deduplicator
+	cd test && npm run test_heavy

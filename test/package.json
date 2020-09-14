@@ -5,7 +5,8 @@
   "main": "test.js",
   "scripts": {
     "start": "tap test.js",
-    "test": "tap test.js"
+    "test": "tap test.js",
+    "test_heavy": "tap test_heavy.js"
   },
   "author": "",
   "license": "ISC",
